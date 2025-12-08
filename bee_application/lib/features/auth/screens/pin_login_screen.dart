@@ -1,11 +1,15 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/user_provider.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// PIN Login Screen - Screen untuk login dengan PIN
-/// Shows greeting dengan nama user
-/// Input PIN 6 digit untuk masuk
+/// Shows greeting dengan nama user dari storage
+/// Input PIN 6 digit untuk masuk dengan validasi hash
 class PinLoginScreen extends StatefulWidget {
   const PinLoginScreen({super.key});
 
@@ -17,12 +21,11 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   String _pin = '';
   bool _hasError = false;
   int _attemptCount = 0;
-
-  // TODO: Get dari SharedPreferences
-  final String _userName = 'Rizal';
-  final String _savedPin = '123456'; // TODO: Get hashed PIN from storage
+  bool _isLocked = false;
 
   void _onNumberPressed(String number) {
+    if (_isLocked) return;
+
     if (_pin.length < 6) {
       setState(() {
         _pin += number;
@@ -37,6 +40,8 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   }
 
   void _onBackspacePressed() {
+    if (_isLocked) return;
+
     if (_pin.isNotEmpty) {
       setState(() {
         _pin = _pin.substring(0, _pin.length - 1);
@@ -46,19 +51,22 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   }
 
   void _validatePin() {
-    // TODO: Compare with hashed PIN from storage
-    if (_pin == _savedPin) {
+    final userProvider = context.read<UserProvider>();
+
+    // Hash the input PIN
+    final bytes = utf8.encode(_pin);
+    final hashedInput = sha256.convert(bytes).toString();
+
+    // Compare with stored hashed PIN
+    if (userProvider.verifyPin(hashedInput)) {
       // PIN benar - login berhasil!
+      userProvider.login();
       _showMessage('Login berhasil!', isError: false);
 
       // Navigate ke Home
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/welcome', // TODO: Navigate to home screen
-            (route) => false,
-          );
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
       });
     } else {
@@ -69,11 +77,23 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
       });
 
       if (_attemptCount >= 3) {
+        setState(() => _isLocked = true);
         _showMessage(
-          'Terlalu banyak percobaan. Silakan coba lagi nanti',
+          'Terlalu banyak percobaan. Coba lagi dalam 30 detik',
           isError: true,
         );
-        // TODO: Lock for some time or show forgot PIN option
+
+        // Unlock after 30 seconds
+        Future.delayed(const Duration(seconds: 30), () {
+          if (mounted) {
+            setState(() {
+              _isLocked = false;
+              _attemptCount = 0;
+              _pin = '';
+            });
+            _showMessage('Anda dapat mencoba lagi', isError: false);
+          }
+        });
       } else {
         _showMessage(
           'PIN salah. ${3 - _attemptCount} percobaan lagi',
@@ -106,6 +126,9 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
+    final userProvider = context.watch<UserProvider>();
+    final userName =
+        userProvider.currentUser?.fullName.split(' ').first ?? 'User';
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -131,16 +154,18 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
 
               // Greeting
               Text(
-                'Haii, $_userName 👋',
+                'Haii, $userName 👋',
                 style: Theme.of(context).textTheme.headlineLarge,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Masukkan PIN Anda',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+                _isLocked ? 'Akun terkunci sementara' : 'Masukkan PIN Anda',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: _isLocked
+                      ? AppColors.errorRed
+                      : AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -161,17 +186,20 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
 
               // Forgot PIN link
               TextButton(
-                onPressed: () {
-                  // TODO: Navigate to forgot PIN flow
-                  _showMessage(
-                    'Fitur lupa PIN akan segera hadir',
-                    isError: false,
-                  );
-                },
+                onPressed: _isLocked
+                    ? null
+                    : () {
+                        _showMessage(
+                          'Fitur lupa PIN akan segera hadir',
+                          isError: false,
+                        );
+                      },
                 child: Text(
                   'Lupa PIN?',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primaryOrange,
+                    color: _isLocked
+                        ? AppColors.textSecondary
+                        : AppColors.primaryOrange,
                   ),
                 ),
               ),

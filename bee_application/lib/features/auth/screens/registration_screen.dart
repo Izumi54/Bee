@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/user_provider.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// Registration Screen - Form pendaftaran akun baru
@@ -46,14 +48,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    // Save user data using Provider
+    final userProvider = context.read<UserProvider>();
+    final success = await userProvider.registerUser(
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _nikController.text.trim(), // Using NIK as phone for now
+    );
 
     setState(() => _isLoading = false);
 
     if (mounted) {
-      // Navigate ke Setup PIN
-      Navigator.pushNamed(context, '/setup-pin');
+      if (success) {
+        // Navigate ke Setup PIN
+        Navigator.pushNamed(context, '/setup-pin');
+      } else {
+        _showMessage('Gagal mendaftarkan akun. Silakan coba lagi.');
+      }
     }
   }
 

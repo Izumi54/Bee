@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/providers.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 
 /// Home Screen - Dashboard utama aplikasi
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  // Mock data - nanti diganti dengan real data dari provider
-  final String userName = 'Rizal';
-  final double balance = 2500000.50;
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +45,24 @@ class HomeScreen extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Hai, $userName 👋',
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(
-                                      color: AppColors.white,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                              Consumer<UserProvider>(
+                                builder: (context, userProvider, child) {
+                                  final userName =
+                                      userProvider.currentUser?.fullName
+                                          .split(' ')
+                                          .first ??
+                                      'User';
+                                  return Text(
+                                    'Hai, $userName 👋',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: AppColors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  );
+                                },
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -144,48 +153,54 @@ class HomeScreen extends StatelessWidget {
       decimalDigits: 0,
     );
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total Saldo',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Icon(
-                Icons.visibility_outlined,
-                size: 20,
-                color: AppColors.textSecondary,
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        final balance = userProvider.balance;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            currencyFormat.format(balance),
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Total Saldo',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.visibility_outlined,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                currencyFormat.format(balance),
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

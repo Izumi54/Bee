@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/providers/providers.dart';
 import 'features/auth/screens/screens.dart';
 import 'features/kyc/screens/screens.dart';
 import 'features/home/screens/screens.dart';
@@ -25,13 +27,25 @@ class BeeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Bee - Smart Finance',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      // Start with Splash Screen
-      initialRoute: '/',
-      onGenerateRoute: _onGenerateRoute,
+    return MultiProvider(
+      providers: [
+        // User state (auth, balance, PIN)
+        ChangeNotifierProvider(create: (_) => UserProvider()..initialize()),
+        // Contacts for transfer
+        ChangeNotifierProvider(create: (_) => ContactProvider()..initialize()),
+        // Transaction history
+        ChangeNotifierProvider(
+          create: (_) => TransactionProvider()..initialize(),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Bee - Smart Finance',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        // Start with Splash Screen
+        initialRoute: '/',
+        onGenerateRoute: _onGenerateRoute,
+      ),
     );
   }
 

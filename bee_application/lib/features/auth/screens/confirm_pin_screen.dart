@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/user_provider.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// Confirm PIN Screen - Konfirmasi PIN yang baru dibuat
@@ -70,16 +74,27 @@ class _ConfirmPinScreenState extends State<ConfirmPinScreen> {
     }
   }
 
-  void _showSuccessAndNavigate() {
-    // TODO: Save PIN to secure storage (hashed)
-    _showMessage('PIN berhasil dibuat!', isError: false);
+  Future<void> _showSuccessAndNavigate() async {
+    // Hash the PIN before saving
+    final bytes = utf8.encode(_originalPin);
+    final hashedPin = sha256.convert(bytes).toString();
 
-    // Navigate ke KYC Selfie screen
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        Navigator.pushNamed(context, '/kyc-selfie');
-      }
-    });
+    // Save hashed PIN using Provider
+    final userProvider = context.read<UserProvider>();
+    final success = await userProvider.setPin(hashedPin);
+
+    if (success) {
+      _showMessage('PIN berhasil dibuat!', isError: false);
+
+      // Navigate ke KYC Selfie screen
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.pushNamed(context, '/kyc-selfie');
+        }
+      });
+    } else {
+      _showMessage('Gagal menyimpan PIN. Silakan coba lagi.', isError: true);
+    }
   }
 
   void _showMessage(String message, {required bool isError}) {
