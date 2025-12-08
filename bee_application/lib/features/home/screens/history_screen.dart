@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/transaction_provider.dart';
 
-/// History Screen - Riwayat transaksi lengkap
+/// History Screen - Riwayat transaksi dari TransactionProvider
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
@@ -23,78 +25,132 @@ class HistoryScreen extends StatelessWidget {
         title: const Text('Riwayat Transaksi'),
         automaticallyImplyLeading: false,
       ),
-      body: ListView.separated(
-        padding: EdgeInsets.all(responsive.horizontalPadding),
-        itemCount: 20,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final isIncome = index % 3 == 0;
-          final amount = (index + 1) * 50000.0;
-          final date = DateTime.now().subtract(Duration(days: index));
+      body: Consumer<TransactionProvider>(
+        builder: (context, transactionProvider, child) {
+          if (transactionProvider.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryOrange),
+            );
+          }
 
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isIncome
-                        ? AppColors.successGreen.withOpacity(0.1)
-                        : AppColors.primaryOrange.withOpacity(0.1),
-                    shape: BoxShape.circle,
+          final transactions = transactionProvider.transactions;
+
+          if (transactions.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 80,
+                    color: AppColors.grayMedium1,
                   ),
-                  child: Icon(
-                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    color: isIncome
-                        ? AppColors.successGreen
-                        : AppColors.primaryOrange,
+                  const SizedBox(height: 16),
+                  Text(
+                    'Belum ada transaksi',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Transaksi Anda akan muncul di sini',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: EdgeInsets.all(responsive.horizontalPadding),
+            itemCount: transactions.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final transaction = transactions[index];
+              final isIncoming = transaction.isIncoming;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isIncome
-                            ? 'Terima dari ${_getNames()[index % _getNames().length]}'
-                            : 'Transfer ke ${_getNames()[index % _getNames().length]}',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                child: Row(
+                  children: [
+                    // Icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isIncoming
+                            ? AppColors.successGreen.withValues(alpha: 0.1)
+                            : AppColors.primaryOrange.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dateFormat.format(date),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      child: Icon(
+                        _getTransactionIcon(transaction.type),
+                        color: isIncoming
+                            ? AppColors.successGreen
+                            : AppColors.primaryOrange,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Description & Date
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            transaction.description,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dateFormat.format(transaction.createdAt),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Amount
+                    Text(
+                      '${isIncoming ? '+' : '-'} ${currencyFormat.format(transaction.amount)}',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isIncoming
+                            ? AppColors.successGreen
+                            : AppColors.errorRed,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${isIncome ? '+' : '-'} ${currencyFormat.format(amount)}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isIncome
-                        ? AppColors.successGreen
-                        : AppColors.errorRed,
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  List<String> _getNames() => ['Budi', 'Siti', 'Ahmad', 'Dewi', 'Rina'];
+  IconData _getTransactionIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.transfer:
+        return Icons.arrow_upward;
+      case TransactionType.receive:
+        return Icons.arrow_downward;
+      case TransactionType.topUp:
+        return Icons.add_circle_outline;
+      case TransactionType.payment:
+        return Icons.payment;
+    }
+  }
 }

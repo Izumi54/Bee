@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/providers.dart';
 import '../../../shared/widgets/widgets.dart';
-import 'package:intl/intl.dart';
 
 /// Transfer Confirmation Screen - Review & confirm transfer
-/// Features: Transaction details, Optional note, PIN confirmation
-/// User-friendly: Clear breakdown, confirm action
+/// Features: Balance check, Deduct balance, Save transaction, PIN confirmation
 class TransferConfirmationScreen extends StatefulWidget {
   const TransferConfirmationScreen({super.key});
 
@@ -24,31 +25,72 @@ class _TransferConfirmationScreenState
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Get transfer data from arguments
     _transferData =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
   }
 
   Future<void> _confirmTransfer() async {
+    if (_transferData == null) return;
+
+    final recipient = _transferData!['recipient'] as Map<String, String>;
+    final amount = _transferData!['amount'] as double;
+
+    // Get providers
+    final userProvider = context.read<UserProvider>();
+    final transactionProvider = context.read<TransactionProvider>();
+
+    // Check sufficient balance
+    if (userProvider.balance < amount) {
+      _showMessage('Saldo tidak mencukupi', isError: true);
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
-    // Simulate transfer processing
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // 1. Deduct balance
+      final balanceSuccess = await userProvider.deductBalance(amount);
+      if (!balanceSuccess) {
+        throw Exception('Gagal memproses saldo');
+      }
 
-    setState(() => _isProcessing = false);
-
-    if (mounted) {
-      // Navigate to success screen
-      Navigator.pushNamed(
-        context,
-        '/transaction-success',
-        arguments: {
-          ..._transferData!,
-          'note': _noteController.text,
-          'timestamp': DateTime.now(),
-        },
+      // 2. Save transaction
+      await transactionProvider.addTransfer(
+        amount: amount,
+        recipientName: recipient['name']!,
+        recipientAccount: recipient['accountNumber']!,
       );
+
+      // 3. Small delay for UX
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      setState(() => _isProcessing = false);
+
+      if (mounted) {
+        // Navigate to success screen
+        Navigator.pushNamed(
+          context,
+          '/transaction-success',
+          arguments: {
+            ..._transferData!,
+            'note': _noteController.text,
+            'timestamp': DateTime.now(),
+          },
+        );
+      }
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      _showMessage('Transfer gagal: ${e.toString()}', isError: true);
     }
+  }
+
+  void _showMessage(String message, {required bool isError}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.errorRed : AppColors.successGreen,
+      ),
+    );
   }
 
   @override
@@ -102,7 +144,9 @@ class _TransferConfirmationScreenState
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryOrange.withOpacity(0.1),
+                              color: AppColors.primaryOrange.withValues(
+                                alpha: 0.1,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -128,6 +172,79 @@ class _TransferConfirmationScreenState
                     ),
                     const SizedBox(height: 32),
 
+                    // Current Balance Info
+                    Consumer<UserProvider>(
+                      builder: (context, userProvider, child) {
+                        final balance = userProvider.balance;
+                        final remainingBalance = balance - amount;
+                        final isInsufficient = balance < amount;
+
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isInsufficient
+                                ? AppColors.errorRed.withValues(alpha: 0.1)
+                                : AppColors.successGreen.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isInsufficient
+                                  ? AppColors.errorRed.withValues(alpha: 0.3)
+                                  : AppColors.successGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isInsufficient
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.account_balance_wallet,
+                                color: isInsufficient
+                                    ? AppColors.errorRed
+                                    : AppColors.successGreen,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isInsufficient
+                                          ? 'Saldo tidak mencukupi!'
+                                          : 'Saldo Anda: ${currencyFormat.format(balance)}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: isInsufficient
+                                                ? AppColors.errorRed
+                                                : AppColors.successGreen,
+                                          ),
+                                    ),
+                                    if (!isInsufficient) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Sisa setelah transfer: ${currencyFormat.format(remainingBalance)}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.textSecondary,
+                                            ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
                     // Transaction Details
                     _buildDetailCard(context, [
                       _DetailRow('Penerima', recipient['name']!),
@@ -137,7 +254,7 @@ class _TransferConfirmationScreenState
                         currencyFormat.format(amount),
                       ),
                       _DetailRow('Biaya Admin', 'GRATIS'),
-                      Divider(),
+                      const Divider(),
                       _DetailRow(
                         'Total',
                         currencyFormat.format(amount),
@@ -181,16 +298,26 @@ class _TransferConfirmationScreenState
                 color: AppColors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
                 ],
               ),
-              child: CustomButton(
-                text: 'Konfirmasi Transfer',
-                onPressed: _isProcessing ? null : _confirmTransfer,
-                isLoading: _isProcessing,
+              child: Consumer<UserProvider>(
+                builder: (context, userProvider, child) {
+                  final isInsufficient = userProvider.balance < amount;
+
+                  return CustomButton(
+                    text: isInsufficient
+                        ? 'Saldo Tidak Cukup'
+                        : 'Konfirmasi Transfer',
+                    onPressed: (_isProcessing || isInsufficient)
+                        ? null
+                        : _confirmTransfer,
+                    isLoading: _isProcessing,
+                  );
+                },
               ),
             ),
           ],
