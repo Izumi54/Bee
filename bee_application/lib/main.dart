@@ -105,6 +105,15 @@ class BeeApp extends StatelessWidget {
           settings: settings,
         );
 
+      case '/transaction-detail':
+        return MaterialPageRoute(
+          builder: (_) => const TransactionDetailScreen(),
+          settings: settings,
+        );
+
+      case '/top-up':
+        return MaterialPageRoute(builder: (_) => const TopUpScreen());
+
       default:
         // 404 screen
         return MaterialPageRoute(

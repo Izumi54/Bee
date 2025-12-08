@@ -6,6 +6,7 @@ import '../../../core/utils/responsive_helper.dart';
 import '../../../core/providers/transaction_provider.dart';
 
 /// History Screen - Riwayat transaksi dari TransactionProvider
+/// Clickable items navigate to transaction detail
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
@@ -40,7 +41,7 @@ class HistoryScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.receipt_long_outlined,
                     size: 80,
                     color: AppColors.grayMedium1,
@@ -72,66 +73,90 @@ class HistoryScreen extends StatelessWidget {
               final transaction = transactions[index];
               final isIncoming = transaction.isIncoming;
 
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
+              return Material(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/transaction-detail',
+                      arguments: transaction,
+                    );
+                  },
                   borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isIncoming
-                            ? AppColors.successGreen.withValues(alpha: 0.1)
-                            : AppColors.primaryOrange.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _getTransactionIcon(transaction.type),
-                        color: isIncoming
-                            ? AppColors.successGreen
-                            : AppColors.primaryOrange,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-
-                    // Description & Date
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            transaction.description,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // Icon
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: isIncoming
+                                ? AppColors.successGreen.withValues(alpha: 0.1)
+                                : AppColors.primaryOrange.withValues(
+                                    alpha: 0.1,
+                                  ),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            dateFormat.format(transaction.createdAt),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textSecondary),
+                          child: Icon(
+                            _getTransactionIcon(transaction.type),
+                            color: isIncoming
+                                ? AppColors.successGreen
+                                : AppColors.primaryOrange,
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                        const SizedBox(width: 16),
 
-                    // Amount
-                    Text(
-                      '${isIncoming ? '+' : '-'} ${currencyFormat.format(transaction.amount)}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isIncoming
-                            ? AppColors.successGreen
-                            : AppColors.errorRed,
-                      ),
+                        // Description & Date
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                transaction.description,
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dateFormat.format(transaction.createdAt),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Amount & Arrow
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${isIncoming ? '+' : '-'} ${currencyFormat.format(transaction.amount)}',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isIncoming
+                                        ? AppColors.successGreen
+                                        : AppColors.errorRed,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               );
             },

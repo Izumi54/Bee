@@ -222,7 +222,9 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.qr_code_scanner,
           label: 'QRIS',
           onTap: () {
-            // TODO: QRIS scanner
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('QRIS Scanner akan segera hadir')),
+            );
           },
         ),
         _buildActionButton(
@@ -230,7 +232,7 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.add_circle_outline,
           label: 'Top Up',
           onTap: () {
-            // TODO: Top up
+            Navigator.pushNamed(context, '/top-up');
           },
         ),
         _buildActionButton(
@@ -238,7 +240,10 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.receipt_long,
           label: 'Riwayat',
           onTap: () {
-            // TODO: History
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HistoryScreen()),
+            );
           },
         ),
       ],
