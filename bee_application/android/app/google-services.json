@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "375015528444",
+    "project_id": "bee-ewallet",
+    "storage_bucket": "bee-ewallet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375015528444:android:7a250d4cc1e3fe1e9d8479",
+        "android_client_info": {
+          "package_name": "com.example.bee_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0mJc4T8kAtaNXqxfuX0Z6yQLyoxRv6dY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

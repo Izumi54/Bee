@@ -58,6 +58,15 @@ dependencies:
   
   # Permission handler for camera permission
   permission_handler: ^11.3.0
+  
+  # Firebase Core - Required for all Firebase services
+  firebase_core: ^2.24.2
+  
+  # Firebase Authentication for user auth
+  firebase_auth: ^4.16.0
+  
+  # Cloud Firestore for database
+  cloud_firestore: ^4.14.0
 
 dev_dependencies:
   flutter_test:
