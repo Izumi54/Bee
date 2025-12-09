@@ -222,9 +222,7 @@ class HomeScreen extends StatelessWidget {
           icon: Icons.qr_code_scanner,
           label: 'QRIS',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('QRIS Scanner akan segera hadir')),
-            );
+            Navigator.pushNamed(context, '/qris');
           },
         ),
         _buildActionButton(

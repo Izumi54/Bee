@@ -148,6 +148,19 @@ class TransactionProvider extends ChangeNotifier {
     );
   }
 
+  /// Add payment transaction (convenience method for QRIS)
+  Future<bool> addPayment({
+    required double amount,
+    required String merchantName,
+  }) async {
+    return addTransaction(
+      type: TransactionType.payment,
+      amount: amount,
+      description: 'Pembayaran ke $merchantName',
+      recipientName: merchantName,
+    );
+  }
+
   /// Save transactions to storage
   Future<void> _saveTransactions() async {
     final prefs = await SharedPreferences.getInstance();

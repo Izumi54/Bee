@@ -114,6 +114,9 @@ class BeeApp extends StatelessWidget {
       case '/top-up':
         return MaterialPageRoute(builder: (_) => const TopUpScreen());
 
+      case '/qris':
+        return MaterialPageRoute(builder: (_) => const QrisScreen());
+
       default:
         // 404 screen
         return MaterialPageRoute(
