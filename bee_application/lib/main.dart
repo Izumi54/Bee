@@ -72,19 +72,6 @@ class BeeApp extends StatelessWidget {
       case '/confirm-pin':
         return MaterialPageRoute(
           builder: (_) => const ConfirmPinScreen(),
-          settings: settings, // Pass arguments
-        );
-
-      case '/pin-login':
-        return MaterialPageRoute(builder: (_) => const PinLoginScreen());
-
-      case '/kyc-selfie':
-        return MaterialPageRoute(builder: (_) => const KycSelfieScreen());
-
-      case '/kyc-success':
-        return MaterialPageRoute(builder: (_) => const KycSuccessScreen());
-
-      case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
 
       case '/transfer-contacts':

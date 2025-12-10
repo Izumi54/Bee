@@ -348,6 +348,48 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
+  /// Send email verification
+  Future<void> sendEmailVerification() async {
+    try {
+      final user = _firebaseUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      if (user.emailVerified) {
+        debugPrint('⚠️ Email already verified');
+        return;
+      }
+
+      await user.sendEmailVerification();
+      debugPrint('✅ Verification email sent');
+    } catch (e) {
+      debugPrint('❌ Send email verification error: $e');
+      throw Exception('Gagal mengirim email verifikasi');
+    }
+  }
+
+  /// Check if email is verified (reload user first)
+  Future<bool> checkEmailVerified() async {
+    try {
+      final user = _firebaseUser;
+      if (user == null) {
+        return false;
+      }
+
+      // Reload user to get latest email verification status
+      await user.reload();
+      _firebaseUser = _authService.getCurrentUser();
+
+      final isVerified = _firebaseUser?.emailVerified ?? false;
+      debugPrint('📧 Email verified: $isVerified');
+      return isVerified;
+    } catch (e) {
+      debugPrint('❌ Check email verified error: $e');
+      return false;
+    }
+  }
+
   @override
   void dispose() {
     _userStreamSubscription?.cancel();
