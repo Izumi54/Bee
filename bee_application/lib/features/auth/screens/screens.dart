@@ -1,6 +1,6 @@
 /// Auth feature exports
 /// Barrel file untuk mudah import semua auth screens
-library auth_screens;
+library;
 
 export 'splash_screen.dart';
 export 'welcome_screen.dart';

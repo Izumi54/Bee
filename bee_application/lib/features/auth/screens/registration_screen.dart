@@ -58,14 +58,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         password: _passwordController.text, // Firebase password
       );
 
-      // Send email verification
-      await userProvider.sendEmailVerification();
-
       setState(() => _isLoading = false);
 
       if (mounted) {
-        // Navigate to Email Verification Screen
-        Navigator.pushReplacementNamed(context, '/email-verification');
+        // Navigate to Setup PIN
+        Navigator.pushNamed(context, '/setup-pin');
       }
     } catch (e) {
       setState(() => _isLoading = false);

@@ -1,6 +1,6 @@
 /// Reusable widgets untuk aplikasi Bee
 /// Export semua widget agar mudah di-import
-library shared_widgets;
+library;
 
 export 'custom_button.dart';
 export 'custom_text_field.dart';

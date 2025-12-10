@@ -1,6 +1,6 @@
 /// Transfer feature exports
 /// Barrel file untuk mudah import transfer screens
-library transfer_screens;
+library;
 
 export 'transfer_contact_list_screen.dart';
 export 'transfer_amount_screen.dart';

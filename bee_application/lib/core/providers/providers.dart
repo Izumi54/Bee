@@ -1,5 +1,5 @@
 /// Barrel file for all providers
-library providers;
+library;
 
 export 'user_provider.dart';
 export 'contact_provider.dart';
