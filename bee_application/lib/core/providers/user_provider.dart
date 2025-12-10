@@ -1,9 +1,11 @@
-import 'dart:convert';
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/services.dart';
 
 /// User Model
 class User {
+  final String id; // Firebase Auth UID
   final String fullName;
   final String email;
   final String phone;
@@ -12,6 +14,7 @@ class User {
   final DateTime createdAt;
 
   User({
+    required this.id,
     required this.fullName,
     required this.email,
     required this.phone,
@@ -20,7 +23,7 @@ class User {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  /// Convert to JSON
+  /// Convert to JSON (for Firestore)
   Map<String, dynamic> toJson() => {
     'fullName': fullName,
     'email': email,
@@ -30,8 +33,9 @@ class User {
     'createdAt': createdAt.toIso8601String(),
   };
 
-  /// Create from JSON
-  factory User.fromJson(Map<String, dynamic> json) => User(
+  /// Create from Firestore document
+  factory User.fromJson(String id, Map<String, dynamic> json) => User(
+    id: id,
     fullName: json['fullName'] ?? '',
     email: json['email'] ?? '',
     phone: json['phone'] ?? '',
@@ -50,6 +54,7 @@ class User {
     String? ktpNumber,
     bool? isKycVerified,
   }) => User(
+    id: id,
     fullName: fullName ?? this.fullName,
     email: email ?? this.email,
     phone: phone ?? this.phone,
@@ -59,17 +64,20 @@ class User {
   );
 }
 
-/// User Provider - Manages user state and persistence
+/// User Provider - Firebase Auth + Firestore
 class UserProvider extends ChangeNotifier {
-  static const String _userKey = 'bee_user_data';
-  static const String _pinKey = 'bee_user_pin';
-  static const String _balanceKey = 'bee_user_balance';
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  final FirestoreService _firestoreService = FirestoreService();
 
+  firebase_auth.User? _firebaseUser;
   User? _currentUser;
   String? _hashedPin;
   double _balance = 0.0;
   bool _isLoggedIn = false;
   bool _isLoading = true;
+
+  StreamSubscription? _userStreamSubscription;
+  StreamSubscription? _authStreamSubscription;
 
   // Getters
   User? get currentUser => _currentUser;
@@ -79,144 +87,271 @@ class UserProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasUser => _currentUser != null;
   bool get hasPin => _hashedPin != null && _hashedPin!.isNotEmpty;
+  String? get userId => _firebaseUser?.uid;
 
-  /// Initialize provider - load data from storage
+  /// Initialize provider - listen to Firebase auth state
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      // Listen to auth state changes
+      _authStreamSubscription = _authService.authStateChanges().listen((
+        firebaseUser,
+      ) {
+        _firebaseUser = firebaseUser;
 
-      // Load user data
-      final userJson = prefs.getString(_userKey);
-      if (userJson != null) {
-        _currentUser = User.fromJson(jsonDecode(userJson));
+        if (firebaseUser != null) {
+          // User is signed in, load user data from Firestore
+          _loadUserData(firebaseUser.uid);
+        } else {
+          // User is signed out
+          _clearLocalData();
+        }
+      });
+
+      // Get current user if already signed in
+      _firebaseUser = _authService.getCurrentUser();
+      if (_firebaseUser != null) {
+        await _loadUserData(_firebaseUser!.uid);
       }
-
-      // Load PIN
-      _hashedPin = prefs.getString(_pinKey);
-
-      // Load balance
-      _balance = prefs.getDouble(_balanceKey) ?? 2500000.0; // Default 2.5jt
     } catch (e) {
-      debugPrint('Error loading user data: $e');
+      debugPrint('❌ Initialize error: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  /// Register new user
+  /// Load user data from Firestore
+  Future<void> _loadUserData(String userId) async {
+    try {
+      // Cancel previous subscription if exists
+      await _userStreamSubscription?.cancel();
+
+      // Listen to user document changes (realtime balance updates!)
+      _userStreamSubscription = _firestoreService.userStream(userId).listen((
+        userData,
+      ) {
+        if (userData != null) {
+          _currentUser = User.fromJson(userId, userData);
+          _balance = (userData['balance'] as num?)?.toDouble() ?? 0.0;
+          _hashedPin = userData['pinHash'];
+          _isLoggedIn = true;
+          notifyListeners();
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Load user data error: $e');
+    }
+  }
+
+  /// Register new user with Firebase
   Future<bool> registerUser({
     required String fullName,
     required String email,
     required String phone,
+    required String password, // NEW: Firebase needs password
   }) async {
     try {
-      _currentUser = User(fullName: fullName, email: email, phone: phone);
+      _isLoading = true;
+      notifyListeners();
 
-      // Set initial balance for new users
-      _balance = 2500000.0;
+      // 1. Create Firebase Auth account
+      final credential = await _authService.signUp(
+        email: email,
+        password: password,
+      );
 
-      await _saveUser();
-      await _saveBalance();
+      if (credential == null || credential.user == null) {
+        throw Exception('Gagal membuat akun');
+      }
 
+      final userId = credential.user!.uid;
+
+      // 2. Create user document in Firestore
+      await _firestoreService.createUser(userId, {
+        'fullName': fullName,
+        'email': email,
+        'phone': phone,
+        'balance': 2500000.0, // Initial balance 2.5M
+        'isKycVerified': false,
+      });
+
+      debugPrint('✅ User registered: $userId');
+
+      // User data will be loaded automatically via auth state listener
+      _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
-      debugPrint('Error registering user: $e');
-      return false;
+      _isLoading = false;
+      notifyListeners();
+      debugPrint('❌ Register error: $e');
+      rethrow; // Let UI handle the error message
     }
   }
 
-  /// Set PIN (hashed)
+  /// Set PIN (hashed) in Firestore
   Future<bool> setPin(String hashedPin) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_pinKey, hashedPin);
+      if (_firebaseUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await _firestoreService.updateUser(_firebaseUser!.uid, {
+        'pinHash': hashedPin,
+      });
+
       _hashedPin = hashedPin;
       notifyListeners();
+      debugPrint('✅ PIN saved');
       return true;
     } catch (e) {
-      debugPrint('Error saving PIN: $e');
+      debugPrint('❌ Set PIN error: $e');
       return false;
     }
   }
 
-  /// Verify PIN
+  /// Verify PIN from Firestore
   bool verifyPin(String hashedPinInput) {
     return _hashedPin == hashedPinInput;
   }
 
-  /// Login user
+  /// Login with email and password (Firebase Auth)
+  Future<bool> loginWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final credential = await _authService.signIn(
+        email: email,
+        password: password,
+      );
+
+      if (credential == null || credential.user == null) {
+        throw Exception('Login gagal');
+      }
+
+      // User data will be loaded automatically via auth state listener
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      debugPrint('❌ Login error: $e');
+      rethrow;
+    }
+  }
+
+  /// Login user (for PIN login after auth)
   void login() {
     _isLoggedIn = true;
     notifyListeners();
   }
 
-  /// Logout user
-  void logout() {
-    _isLoggedIn = false;
-    notifyListeners();
-  }
-
-  /// Update KYC status
-  Future<void> setKycVerified(bool verified) async {
-    if (_currentUser != null) {
-      _currentUser = _currentUser!.copyWith(isKycVerified: verified);
-      await _saveUser();
-      notifyListeners();
+  /// Logout user from Firebase
+  Future<void> logout() async {
+    try {
+      await _authService.signOut();
+      _clearLocalData();
+      debugPrint('✅ User logged out');
+    } catch (e) {
+      debugPrint('❌ Logout error: $e');
+      rethrow;
     }
   }
 
-  /// Update balance
+  /// Update KYC status in Firestore
+  Future<void> setKycVerified(bool verified) async {
+    if (_firebaseUser == null) return;
+
+    try {
+      await _firestoreService.updateUser(_firebaseUser!.uid, {
+        'isKycVerified': verified,
+      });
+      debugPrint('✅ KYC status updated');
+    } catch (e) {
+      debugPrint('❌ Set KYC error: $e');
+    }
+  }
+
+  /// Update balance in Firestore
   Future<bool> updateBalance(double amount) async {
+    if (_firebaseUser == null) return false;
+
     final newBalance = _balance + amount;
     if (newBalance < 0) return false; // Prevent negative balance
 
-    _balance = newBalance;
-    await _saveBalance();
-    notifyListeners();
-    return true;
+    try {
+      await _firestoreService.updateBalance(_firebaseUser!.uid, newBalance);
+      // Balance will update automatically via stream
+      return true;
+    } catch (e) {
+      debugPrint('❌ Update balance error: $e');
+      return false;
+    }
   }
 
   /// Deduct balance (for transfer)
   Future<bool> deductBalance(double amount) async {
+    if (_firebaseUser == null) return false;
     if (_balance < amount) return false; // Insufficient balance
-    return updateBalance(-amount);
+
+    try {
+      await _firestoreService.deductBalance(_firebaseUser!.uid, amount);
+      // Balance will update automatically via stream
+      return true;
+    } catch (e) {
+      debugPrint('❌ Deduct balance error: $e');
+      return false;
+    }
   }
 
   /// Add balance (for top up/receive)
   Future<bool> addBalance(double amount) async {
-    return updateBalance(amount);
+    if (_firebaseUser == null) return false;
+
+    try {
+      await _firestoreService.addBalance(_firebaseUser!.uid, amount);
+      // Balance will update automatically via stream
+      return true;
+    } catch (e) {
+      debugPrint('❌ Add balance error: $e');
+      return false;
+    }
   }
 
-  /// Save user to storage
-  Future<void> _saveUser() async {
-    if (_currentUser == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(_currentUser!.toJson()));
-  }
-
-  /// Save balance to storage
-  Future<void> _saveBalance() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_balanceKey, _balance);
-  }
-
-  /// Clear all user data (for testing/reset)
-  Future<void> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
-    await prefs.remove(_pinKey);
-    await prefs.remove(_balanceKey);
-
+  /// Clear local data on sign out
+  void _clearLocalData() {
     _currentUser = null;
     _hashedPin = null;
     _balance = 0.0;
     _isLoggedIn = false;
-
+    _firebaseUser = null;
     notifyListeners();
+  }
+
+  /// Clear all user data (logout + delete account)
+  Future<void> clearAllData() async {
+    try {
+      await _authService.deleteAccount();
+      _clearLocalData();
+      debugPrint('✅ All data cleared');
+    } catch (e) {
+      debugPrint('❌ Clear data error: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  void dispose() {
+    _userStreamSubscription?.cancel();
+    _authStreamSubscription?.cancel();
+    super.dispose();
   }
 }

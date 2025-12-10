@@ -48,22 +48,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isLoading = true);
 
-    // Save user data using Provider
-    final userProvider = context.read<UserProvider>();
-    final success = await userProvider.registerUser(
-      fullName: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _nikController.text.trim(), // Using NIK as phone for now
-    );
+    try {
+      // Save user data using Firebase Auth + Firestore
+      final userProvider = context.read<UserProvider>();
+      await userProvider.registerUser(
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _nikController.text.trim(), // Using NIK as phone for now
+        password: _passwordController.text, // Firebase password
+      );
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
 
-    if (mounted) {
-      if (success) {
+      if (mounted) {
         // Navigate ke Setup PIN
         Navigator.pushNamed(context, '/setup-pin');
-      } else {
-        _showMessage('Gagal mendaftarkan akun. Silakan coba lagi.');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        _showMessage(e.toString().replaceAll('Exception: ', ''));
       }
     }
   }
