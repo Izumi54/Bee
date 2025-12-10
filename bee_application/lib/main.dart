@@ -34,14 +34,14 @@ class BeeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // User state (auth, balance, PIN)
+        // User state (auth, balance, PIN) - initializes Firebase Auth
         ChangeNotifierProvider(create: (_) => UserProvider()..initialize()),
-        // Contacts for transfer
-        ChangeNotifierProvider(create: (_) => ContactProvider()..initialize()),
-        // Transaction history
-        ChangeNotifierProvider(
-          create: (_) => TransactionProvider()..initialize(),
-        ),
+
+        // Contacts for transfer - will be initialized after user login
+        ChangeNotifierProvider(create: (_) => ContactProvider()),
+
+        // Transaction history - will be initialized after user login
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
       ],
       child: MaterialApp(
         title: 'Bee - Smart Finance',

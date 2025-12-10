@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/services.dart';
 
 /// Contact Model
 class Contact {
@@ -10,43 +11,54 @@ class Contact {
   final DateTime createdAt;
 
   Contact({
-    String? id,
+    required this.id,
     required this.name,
     required this.accountNumber,
     DateTime? createdAt,
-  }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-       createdAt = createdAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now();
 
-  /// Convert to JSON
+  /// Convert to JSON (for Firestore)
   Map<String, dynamic> toJson() => {
-    'id': id,
     'name': name,
     'accountNumber': accountNumber,
     'createdAt': createdAt.toIso8601String(),
   };
 
-  /// Create from JSON
-  factory Contact.fromJson(Map<String, dynamic> json) => Contact(
-    id: json['id'],
-    name: json['name'] ?? '',
-    accountNumber: json['accountNumber'] ?? '',
-    createdAt: json['createdAt'] != null
-        ? DateTime.parse(json['createdAt'])
-        : DateTime.now(),
-  );
+  /// Create from Firestore document
+  factory Contact.fromJson(String id, Map<String, dynamic> json) {
+    // Handle Timestamp from Firestore
+    DateTime createdAt;
+    if (json['createdAt'] is Timestamp) {
+      createdAt = (json['createdAt'] as Timestamp).toDate();
+    } else if (json['createdAt'] is String) {
+      createdAt = DateTime.parse(json['createdAt']);
+    } else {
+      createdAt = DateTime.now();
+    }
+
+    return Contact(
+      id: id,
+      name: json['name'] ?? '',
+      accountNumber: json['accountNumber'] ?? '',
+      createdAt: createdAt,
+    );
+  }
 
   /// Convert to Map<String, String> for backward compatibility
   Map<String, String> toMap() => {'name': name, 'accountNumber': accountNumber};
 }
 
-/// Contact Provider - Manages contacts state and persistence
+/// Contact Provider - Firebase Firestore with realtime updates
 class ContactProvider extends ChangeNotifier {
-  static const String _contactsKey = 'bee_contacts';
+  final FirestoreService _firestoreService = FirestoreService();
 
   List<Contact> _contacts = [];
   List<Contact> _filteredContacts = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  String? _userId;
+
+  StreamSubscription? _contactSubscription;
 
   // Getters
   List<Contact> get contacts => _contacts;
@@ -54,54 +66,51 @@ class ContactProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
 
-  /// Initialize provider - load contacts from storage
-  Future<void> initialize() async {
+  /// Initialize provider - listen to Firestore contacts
+  Future<void> initialize(String userId) async {
+    _userId = userId;
     _isLoading = true;
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final contactsJson = prefs.getString(_contactsKey);
+      // Cancel previous subscription
+      await _contactSubscription?.cancel();
 
-      if (contactsJson != null) {
-        final List<dynamic> decoded = jsonDecode(contactsJson);
-        _contacts = decoded.map((e) => Contact.fromJson(e)).toList();
-      } else {
-        // Load default contacts if none exist
-        _contacts = _getDefaultContacts();
-        await _saveContacts();
-      }
-
-      _filteredContacts = List.from(_contacts);
+      // Listen to contacts stream (realtime updates!)
+      _contactSubscription = _firestoreService
+          .contactsStream(userId)
+          .listen(
+            (contactMaps) {
+              _contacts = contactMaps
+                  .map((map) => Contact.fromJson(map['id'], map))
+                  .toList();
+              _applySearchFilter();
+              _isLoading = false;
+              notifyListeners();
+            },
+            onError: (error) {
+              debugPrint('❌ Contact stream error: $error');
+              _isLoading = false;
+              notifyListeners();
+            },
+          );
     } catch (e) {
-      debugPrint('Error loading contacts: $e');
-      _contacts = _getDefaultContacts();
-      _filteredContacts = List.from(_contacts);
+      debugPrint('❌ Initialize contacts error: $e');
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
-  /// Get default contacts (mock data)
-  List<Contact> _getDefaultContacts() {
-    return [
-      Contact(name: 'Budi Santoso', accountNumber: '1234567890'),
-      Contact(name: 'Siti Nurhaliza', accountNumber: '0987654321'),
-      Contact(name: 'Ahmad Dahlan', accountNumber: '1122334455'),
-      Contact(name: 'Dewi Lestari', accountNumber: '5544332211'),
-      Contact(name: 'Rina Wijaya', accountNumber: '6677889900'),
-      Contact(name: 'Andi Pratama', accountNumber: '9988776655'),
-      Contact(name: 'Fitri Handayani', accountNumber: '1231231234'),
-      Contact(name: 'Joko Widodo', accountNumber: '4564564567'),
-    ];
-  }
-
-  /// Add new contact
+  /// Add new contact to Firestore
   Future<bool> addContact({
     required String name,
     required String accountNumber,
   }) async {
+    if (_userId == null) {
+      debugPrint('❌ User ID is null');
+      return false;
+    }
+
     // Validate
     if (name.trim().isEmpty || accountNumber.trim().isEmpty) {
       return false;
@@ -116,34 +125,34 @@ class ContactProvider extends ChangeNotifier {
     }
 
     try {
-      final newContact = Contact(
-        name: name.trim(),
-        accountNumber: accountNumber.trim(),
-      );
+      await _firestoreService.addContact(_userId!, {
+        'name': name.trim(),
+        'accountNumber': accountNumber.trim(),
+      });
 
-      _contacts.insert(0, newContact); // Add to top
-      await _saveContacts();
-
-      // Re-apply search filter
-      _applySearchFilter();
-      notifyListeners();
+      debugPrint('✅ Contact added');
       return true;
+      // Contact will be added to list automatically via stream
     } catch (e) {
-      debugPrint('Error adding contact: $e');
+      debugPrint('❌ Add contact error: $e');
       return false;
     }
   }
 
-  /// Delete contact
+  /// Delete contact from Firestore
   Future<bool> deleteContact(String contactId) async {
+    if (_userId == null) {
+      debugPrint('❌ User ID is null');
+      return false;
+    }
+
     try {
-      _contacts.removeWhere((c) => c.id == contactId);
-      await _saveContacts();
-      _applySearchFilter();
-      notifyListeners();
+      await _firestoreService.deleteContact(_userId!, contactId);
+      debugPrint('✅ Contact deleted');
       return true;
+      // Contact will be removed from list automatically via stream
     } catch (e) {
-      debugPrint('Error deleting contact: $e');
+      debugPrint('❌ Delete contact error: $e');
       return false;
     }
   }
@@ -177,13 +186,6 @@ class ContactProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Save contacts to storage
-  Future<void> _saveContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = _contacts.map((c) => c.toJson()).toList();
-    await prefs.setString(_contactsKey, jsonEncode(jsonList));
-  }
-
   /// Get contact by ID
   Contact? getContactById(String id) {
     try {
@@ -193,12 +195,16 @@ class ContactProvider extends ChangeNotifier {
     }
   }
 
-  /// Clear all contacts (for testing)
+  /// Clear all contacts (local only, doesn't delete from Firestore)
   Future<void> clearAllContacts() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_contactsKey);
     _contacts = [];
     _filteredContacts = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _contactSubscription?.cancel();
+    super.dispose();
   }
 }
