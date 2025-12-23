@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
 import '../../../core/providers/user_provider.dart';
+import '../../../core/providers/transaction_provider.dart';
+import '../../../core/providers/contact_provider.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// PIN Login Screen - Screen untuk login dengan PIN
@@ -50,7 +52,7 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
     }
   }
 
-  void _validatePin() {
+  void _validatePin() async {
     final userProvider = context.read<UserProvider>();
 
     // Hash the input PIN
@@ -61,6 +63,18 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
     if (userProvider.verifyPin(hashedInput)) {
       // PIN benar - login berhasil!
       userProvider.login();
+
+      // Initialize Transaction & Contact providers with userId
+      final userId = userProvider.userId;
+      if (userId != null) {
+        final transactionProvider = context.read<TransactionProvider>();
+        final contactProvider = context.read<ContactProvider>();
+
+        await transactionProvider.initialize(userId);
+        await contactProvider.initialize(userId);
+        debugPrint('✅ Providers initialized with userId: $userId');
+      }
+
       _showMessage('Login berhasil!', isError: false);
 
       // Navigate ke Home

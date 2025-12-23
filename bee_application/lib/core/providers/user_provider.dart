@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/services.dart';
 
 /// User Model
@@ -41,10 +42,26 @@ class User {
     phone: json['phone'] ?? '',
     ktpNumber: json['ktpNumber'],
     isKycVerified: json['isKycVerified'] ?? false,
-    createdAt: json['createdAt'] != null
-        ? DateTime.parse(json['createdAt'])
-        : DateTime.now(),
+    createdAt: _parseDateTime(json['createdAt']),
   );
+
+  /// Helper to parse DateTime from Firestore (handles both Timestamp and String)
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+
+    // Handle Firestore Timestamp
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    // Handle String (ISO8601)
+    if (value is String) {
+      return DateTime.parse(value);
+    }
+
+    // Fallback
+    return DateTime.now();
+  }
 
   /// Copy with modifications
   User copyWith({
