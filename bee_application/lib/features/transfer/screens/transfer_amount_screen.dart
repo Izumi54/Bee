@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
+import '../../../core/providers/providers.dart';
 import '../../../shared/widgets/widgets.dart';
 import 'package:intl/intl.dart';
 
@@ -18,6 +20,10 @@ class _TransferAmountScreenState extends State<TransferAmountScreen> {
   final TextEditingController _amountController = TextEditingController();
   Map<String, String>? _recipient;
   double _amount = 0;
+  String _paymentMethod = 'balance'; // 'balance' or 'pay_later'
+  double _userBalance = 0;
+  double _payLaterAvailable = 0;
+  bool _isPayLaterActive = false;
 
   @override
   void didChangeDependencies() {
@@ -25,6 +31,14 @@ class _TransferAmountScreenState extends State<TransferAmountScreen> {
     // Get recipient data from arguments
     _recipient =
         ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
+
+    // Get user balance and Pay Later info
+    final userProvider = context.watch<UserProvider>();
+    final payLaterProvider = context.watch<PayLaterProvider>();
+
+    _userBalance = userProvider.balance;
+    _isPayLaterActive = payLaterProvider.isActive;
+    _payLaterAvailable = payLaterProvider.availableLimit;
   }
 
   void _onAmountChanged(String value) {
@@ -69,11 +83,26 @@ class _TransferAmountScreenState extends State<TransferAmountScreen> {
       return;
     }
 
+    // Check if using Pay Later but not active
+    if (_paymentMethod == 'pay_later' && !_isPayLaterActive) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aktifkan Bee Pay Later terlebih dahulu'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
+      return;
+    }
+
     // Navigate to confirmation
     Navigator.pushNamed(
       context,
       '/transfer-confirmation',
-      arguments: {'recipient': _recipient, 'amount': _amount},
+      arguments: {
+        'recipient': _recipient,
+        'amount': _amount,
+        'paymentMethod': _paymentMethod,
+      },
     );
   }
 
@@ -214,33 +243,9 @@ class _TransferAmountScreenState extends State<TransferAmountScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Balance Info
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.tealCyan.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.tealCyan.withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: AppColors.tealCyan,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Saldo Anda: Rp 2.500.000',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Payment Method Selection
+              _buildPaymentMethodSection(),
+
               const SizedBox(height: 32),
 
               // Continue Button
@@ -262,6 +267,199 @@ class _TransferAmountScreenState extends State<TransferAmountScreen> {
       child: Text(
         label,
         style: const TextStyle(color: AppColors.primaryOrange),
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodSection() {
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    final bool isBalanceSufficient = _amount <= _userBalance;
+    final double amountNeeded = _amount - _userBalance;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Metode Pembayaran',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 12),
+
+        // Balance Option
+        _buildPaymentOption(
+          method: 'balance',
+          title: 'Saldo Bee',
+          subtitle: currencyFormat.format(_userBalance),
+          icon: Icons.account_balance_wallet,
+          isAvailable: isBalanceSufficient,
+          warningText: isBalanceSufficient
+              ? null
+              : 'Saldo tidak cukup (kurang ${currencyFormat.format(amountNeeded)})',
+        ),
+
+        const SizedBox(height: 12),
+
+        // Pay Later Option
+        if (_isPayLaterActive)
+          _buildPaymentOption(
+            method: 'pay_later',
+            title: 'Bee Pay Later',
+            subtitle: 'Tersedia ${currencyFormat.format(_payLaterAvailable)}',
+            icon: Icons.credit_card,
+            isAvailable: _amount <= _payLaterAvailable,
+            warningText: _amount > _payLaterAvailable
+                ? 'Limit Pay Later tidak cukup'
+                : null,
+          ),
+
+        // Activate Pay Later CTA
+        if (!_isPayLaterActive && !isBalanceSufficient) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primaryOrange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primaryOrange.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.lightbulb_outline,
+                  color: AppColors.primaryOrange,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Aktifkan Bee Pay Later untuk pinjaman hingga Rp 5.000.000',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/pay-later-activation');
+                  },
+                  child: const Text('Aktifkan'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required String method,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isAvailable,
+    String? warningText,
+  }) {
+    final isSelected = _paymentMethod == method;
+
+    return GestureDetector(
+      onTap: isAvailable
+          ? () {
+              setState(() {
+                _paymentMethod = method;
+              });
+            }
+          : null,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryOrange.withOpacity(0.1)
+              : AppColors.grayLight1,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primaryOrange
+                : isAvailable
+                ? AppColors.grayMedium1
+                : AppColors.errorRed.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primaryOrange.withOpacity(0.2)
+                        : AppColors.grayMedium1.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: isSelected
+                        ? AppColors.primaryOrange
+                        : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isAvailable
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryOrange,
+                    size: 24,
+                  ),
+              ],
+            ),
+            if (warningText != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                warningText,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.errorRed),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
