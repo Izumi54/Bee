@@ -10,6 +10,7 @@ import 'features/auth/screens/screens.dart';
 import 'features/kyc/screens/screens.dart';
 import 'features/home/screens/screens.dart';
 import 'features/transfer/screens/screens.dart';
+import 'features/pay_later/screens/screens.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -42,6 +43,9 @@ class BeeApp extends StatelessWidget {
 
         // Transaction history - will be initialized after user login
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+
+        // Pay Later - will be initialized after user login
+        ChangeNotifierProvider(create: (_) => PayLaterProvider()),
       ],
       child: MaterialApp(
         title: 'Bee - Smart Finance',
@@ -122,6 +126,15 @@ class BeeApp extends StatelessWidget {
 
       case '/qris':
         return MaterialPageRoute(builder: (_) => const QrisScreen());
+
+      // Pay Later Routes
+      case '/pay-later':
+        return MaterialPageRoute(builder: (_) => const PayLaterMainScreen());
+
+      case '/pay-later-activation':
+        return MaterialPageRoute(
+          builder: (_) => const PayLaterActivationScreen(),
+        );
 
       default:
         // 404 screen

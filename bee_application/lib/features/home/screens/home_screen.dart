@@ -4,12 +4,30 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/responsive_helper.dart';
 import '../../../core/providers/providers.dart';
+import '../widgets/pay_later_card.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 
 /// Home Screen - Dashboard utama aplikasi
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Pay Later provider with userId
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<UserProvider>().userId;
+      if (userId != null) {
+        context.read<PayLaterProvider>().initialize(userId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
