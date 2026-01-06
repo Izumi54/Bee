@@ -1,13 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/providers/user_provider.dart';
 import '../../../core/utils/responsive_helper.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// KYC Success Screen - Konfirmasi verifikasi berhasil
 /// User diberitahu bahwa verifikasi sedang diproses
 /// Navigate ke Home setelah user tap "Lanjutkan"
-class KycSuccessScreen extends StatelessWidget {
+class KycSuccessScreen extends StatefulWidget {
   const KycSuccessScreen({super.key});
+
+  @override
+  State<KycSuccessScreen> createState() => _KycSuccessScreenState();
+}
+
+class _KycSuccessScreenState extends State<KycSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // AUTO-APPROVE KYC for development/testing
+    _autoApproveKyc();
+  }
+
+  Future<void> _autoApproveKyc() async {
+    try {
+      final userProvider = context.read<UserProvider>();
+      final userId = userProvider.userId;
+
+      if (userId != null) {
+        await FirebaseFirestore.instance.collection('users').doc(userId).update(
+          {'isKycVerified': true},
+        );
+
+        debugPrint('✅ KYC Auto-Approved for testing!');
+      }
+    } catch (e) {
+      debugPrint('❌ Auto-approve error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
