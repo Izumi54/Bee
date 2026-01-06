@@ -123,16 +123,44 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const SizedBox(height: 8),
                     _buildQuickActions(context),
-                    const SizedBox(height: 24),
-
-                    // Section title
-                    Text(
-                      'Transaksi Terkini',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
                   ],
+                ),
+              ),
+            ),
+
+            // Pay Later Card
+            SliverToBoxAdapter(
+              child: Consumer<PayLaterProvider>(
+                builder: (context, payLaterProvider, child) {
+                  return PayLaterCard(
+                    isActive: payLaterProvider.isActive,
+                    creditLimit: payLaterProvider.creditLimit,
+                    availableLimit: payLaterProvider.availableLimit,
+                    usedLimit: payLaterProvider.usedLimit,
+                    onTap: () {
+                      if (payLaterProvider.isActive) {
+                        Navigator.pushNamed(context, '/pay-later');
+                      } else {
+                        Navigator.pushNamed(context, '/pay-later-activation');
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
+
+            // Transaction Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.horizontalPadding,
+                  vertical: 16,
+                ),
+                child: Text(
+                  'Transaksi Terkini',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ),
