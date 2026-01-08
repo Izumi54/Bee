@@ -25,18 +25,20 @@ class BeeLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Logo placeholder (bee icon)
-        Container(
-          width: logoSize,
-          height: logoSize,
-          decoration: BoxDecoration(
-            color: AppColors.primaryOrange.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.savings, // Temporary icon
-            size: logoSize * 0.5,
-            color: AppColors.primaryOrange,
+        // Logo bee (bukan celengan!)
+        ClipOval(
+          child: Container(
+            width: logoSize,
+            height: logoSize,
+            decoration: BoxDecoration(
+              color: AppColors.primaryOrange.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            padding: EdgeInsets.all(logoSize * 0.15),
+            child: Image.asset(
+              'assets/images/bee_logo.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
 
