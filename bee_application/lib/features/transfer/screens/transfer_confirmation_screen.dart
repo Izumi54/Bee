@@ -212,77 +212,9 @@ class _TransferConfirmationScreenState
                     ),
                     const SizedBox(height: 32),
 
-                    // Current Balance Info
-                    Consumer<UserProvider>(
-                      builder: (context, userProvider, child) {
-                        final balance = userProvider.balance;
-                        final remainingBalance = balance - amount;
-                        final isInsufficient = balance < amount;
-
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isInsufficient
-                                ? AppColors.errorRed.withValues(alpha: 0.1)
-                                : AppColors.successGreen.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isInsufficient
-                                  ? AppColors.errorRed.withValues(alpha: 0.3)
-                                  : AppColors.successGreen.withValues(
-                                      alpha: 0.3,
-                                    ),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isInsufficient
-                                    ? Icons.warning_amber_rounded
-                                    : Icons.account_balance_wallet,
-                                color: isInsufficient
-                                    ? AppColors.errorRed
-                                    : AppColors.successGreen,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      isInsufficient
-                                          ? 'Saldo tidak mencukupi!'
-                                          : 'Saldo Anda: ${currencyFormat.format(balance)}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: isInsufficient
-                                                ? AppColors.errorRed
-                                                : AppColors.successGreen,
-                                          ),
-                                    ),
-                                    if (!isInsufficient) ...[
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Sisa setelah transfer: ${currencyFormat.format(remainingBalance)}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                    // Balance info dihapus untuk simplifikasi
+                    // Transfer tetap berfungsi tanpa info saldo
+                    const SizedBox(height: 8),
                     const SizedBox(height: 24),
 
                     // Transaction Details
