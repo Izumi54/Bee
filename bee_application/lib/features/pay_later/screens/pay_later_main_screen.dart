@@ -235,18 +235,18 @@ class _PayLaterMainScreenState extends State<PayLaterMainScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Colors.green.shade50,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
+              border: Border.all(color: Colors.green.shade200),
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.blue.shade700),
+                Icon(Icons.check_circle_outline, color: Colors.green.shade700),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Fitur peminjaman akan segera hadir di Phase 2. Saat ini Anda sudah dapat melihat limit kredit Anda.',
-                    style: TextStyle(fontSize: 13, color: Colors.blue.shade900),
+                    'Pay Later sudah aktif! Gunakan saat transfer atau pembayaran untuk cicilan tanpa bunga.',
+                    style: TextStyle(fontSize: 13, color: Colors.green.shade900),
                   ),
                 ),
               ],
@@ -352,7 +352,7 @@ class _PayLaterMainScreenState extends State<PayLaterMainScreen>
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      'Fitur ini akan tersedia di Phase 2',
+                      'Riwayat transaksi Pay Later Anda akan ditampilkan di sini',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange.shade900,

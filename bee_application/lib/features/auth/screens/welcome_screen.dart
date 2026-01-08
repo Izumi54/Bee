@@ -47,11 +47,7 @@ class WelcomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.account_balance_wallet,
-                      size: 64,
-                      color: AppColors.primaryOrange.withOpacity(0.3),
-                    ),
+                    Image.asset('assets/images/bee_logo.png', width: 120, height: 120,),
                     const SizedBox(height: 16),
                     Text(
                       'Kelola keuangan Anda dengan mudah dan aman',

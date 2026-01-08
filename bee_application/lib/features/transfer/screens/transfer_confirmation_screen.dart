@@ -21,6 +21,7 @@ class _TransferConfirmationScreenState
   final TextEditingController _noteController = TextEditingController();
   Map<String, dynamic>? _transferData;
   bool _isProcessing = false;
+  int _selectedTenor = 3; // Default 3 months for Pay Later
 
   @override
   void didChangeDependencies() {
@@ -34,32 +35,67 @@ class _TransferConfirmationScreenState
 
     final recipient = _transferData!['recipient'] as Map<String, String>;
     final amount = _transferData!['amount'] as double;
+    final paymentMethod =
+        _transferData!['paymentMethod'] as String? ?? 'balance';
 
     // Get providers
     final userProvider = context.read<UserProvider>();
     final transactionProvider = context.read<TransactionProvider>();
+    final payLaterProvider = context.read<PayLaterProvider>();
 
-    // Check sufficient balance
-    if (userProvider.balance < amount) {
-      _showMessage('Saldo tidak mencukupi', isError: true);
-      return;
+    // Debug: Log payment method
+    debugPrint('🔍 Payment Method: $paymentMethod');
+
+    // Check payment method requirements
+    if (paymentMethod == 'balance') {
+      if (userProvider.balance < amount) {
+        _showMessage('Saldo tidak mencukupi', isError: true);
+        return;
+      }
+    } else if (paymentMethod == 'pay_later') {
+      if (!payLaterProvider.isActive) {
+        _showMessage('Pay Later belum aktif', isError: true);
+        return;
+      }
+      if (payLaterProvider.availableLimit < amount) {
+        _showMessage('Limit Pay Later tidak cukup', isError: true);
+        return;
+      }
     }
 
     setState(() => _isProcessing = true);
 
     try {
-      // 1. Deduct balance
-      final balanceSuccess = await userProvider.deductBalance(amount);
-      if (!balanceSuccess) {
-        throw Exception('Gagal memproses saldo');
-      }
+      if (paymentMethod == 'balance') {
+        // Balance payment
+        final balanceSuccess = await userProvider.deductBalance(amount);
+        if (!balanceSuccess) {
+          throw Exception('Gagal memproses saldo');
+        }
 
-      // 2. Save transaction
-      await transactionProvider.addTransfer(
-        amount: amount,
-        recipientName: recipient['name']!,
-        recipientAccount: recipient['accountNumber']!,
-      );
+        await transactionProvider.addTransfer(
+          amount: amount,
+          recipientName: recipient['name']!,
+          recipientAccount: recipient['accountNumber']!,
+        );
+      } else if (paymentMethod == 'pay_later') {
+        // Pay Later payment
+        final userId = userProvider.currentUser?.phone ?? '';
+
+        await payLaterProvider.createLoan(
+          userId: userId,
+          amount: amount,
+          tenorMonths: _selectedTenor,
+          purpose: 'transfer',
+          recipientName: recipient['name'],
+        );
+
+        await transactionProvider.addTransfer(
+          amount: amount,
+          recipientName: recipient['name']!,
+          recipientAccount: recipient['accountNumber']!,
+        );
+      }
 
       // 3. Small delay for UX
       await Future.delayed(const Duration(milliseconds: 500));

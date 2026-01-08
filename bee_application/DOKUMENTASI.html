@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEE Bank Digital - Dokumentasi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #FF9800;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #FF9800;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #6C5CE7;
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #6C5CE7;
+            padding-left: 15px;
+        }
+        
+        h3 {
+            color: #333;
+            font-size: 1.3em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        h4 {
+            color: #555;
+            font-size: 1.1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+        
+        .badge-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #6C5CE7;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #F44336;
+            color: white;
+        }
+        
+        .info-box {
+            background: #E3F2FD;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success-box {
+            background: #E8F5E9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            color: inherit;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #6C5CE7;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .version {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐝 BEE Bank Digital</h1>
+            <p class="version">Dokumentasi Lengkap v1.0.0</p>
+            <p><span class="badge badge-info">Android</span> <span class="badge badge-info">iOS</span> <span class="badge badge-info">Web</span> <span class="badge badge-info">Windows</span></p>
+        </div>
+
+        <h2>📱 Tentang Aplikasi</h2>
+        <p><strong>BEE</strong> adalah aplikasi Bank Digital modern yang memungkinkan pengguna mengelola keuangan digital dengan mudah dan aman. Aplikasi ini dilengkapi dengan fitur <strong>Pay Later</strong> untuk kemudahan transaksi dengan sistem cicilan.</p>
+        
+        <div class="success-box">
+            <h4>Fitur Utama</h4>
+            <ul>
+                <li><span class="badge badge-success">✓</span> <strong>Bank Digital</strong> - Top up, transfer, dan kelola saldo</li>
+                <li><span class="badge badge-success">✓</span> <strong>Pay Later</strong> - Pinjaman dengan cicilan fleksibel</li>
+                <li><span class="badge badge-success">✓</span> <strong>Transaction History</strong> - Riwayat transaksi lengkap</li>
+                <li><span class="badge badge-success">✓</span> <strong>Security</strong> - PIN 6 digit & Firebase Authentication</li>
+            </ul>
+        </div>
+
+        <h2>🚀 Cara Menggunakan Aplikasi</h2>
+
+        <h3>1️⃣ Download & Install</h3>
+        <div class="info-box">
+            <strong>Untuk Android:</strong>
+            <ol>
+                <li>Download file <code>bee.apk</code></li>
+                <li>Buka file APK di perangkat Android</li>
+                <li>Izinkan "Install from Unknown Sources" jika diminta</li>
+                <li>Klik Install</li>
+                <li>Tunggu hingga instalasi selesai</li>
+            </ol>
+        </div>
+
+        <h3>2️⃣ Registrasi Akun Baru</h3>
+        <ol>
+            <li>Buka Aplikasi BEE - Tampilan welcome screen dengan logo Bee</li>
+            <li>Klik <strong>"Daftar"</strong></li>
+            <li>Isi Data Registrasi:
+                <ul>
+                    <li>Nama Lengkap (min. 3 karakter)</li>
+                    <li>Email (format email valid)</li>
+                    <li>Nomor Telepon (10-13 digit)</li>
+                    <li>Centang "Saya setuju dengan syarat dan ketentuan"</li>
+                </ul>
+            </li>
+            <li>Buat PIN 6 Digit - Masukkan dan konfirmasi PIN</li>
+            <li><span class="badge badge-success">✓</span> Registrasi Selesai - Otomatis login dengan saldo awal Rp 0</li>
+        </ol>
+
+        <h3>3️⃣ Login</h3>
+        <ol>
+            <li>Klik <strong>"Masuk"</strong> di welcome screen</li>
+            <li>Masukkan PIN 6 Digit (yang dibuat saat registrasi)</li>
+            <li><span class="badge badge-success">✓</span> Berhasil Login → Masuk ke Home Screen</li>
+        </ol>
+
+        <h3>4️⃣ Top Up Saldo</h3>
+        <ol>
+            <li>Di Home Screen, klik <strong>"Top Up"</strong></li>
+            <li>Pilih Nominal (quick amount atau custom)</li>
+            <li>Pilih Metode Pembayaran (Virtual Account, Bank Digital, Transfer Bank)</li>
+            <li>Konfirmasi Top Up</li>
+            <li><span class="badge badge-success">✓</span> Saldo Bertambah</li>
+        </ol>
+
+        <h3>5️⃣ Transfer Uang</h3>
+        <ol>
+            <li>Klik <strong>"Transfer"</strong> di Home Screen</li>
+            <li>Pilih Penerima (dari daftar atau tambah kontak baru)</li>
+            <li>Masukkan Jumlah Transfer</li>
+            <li>Pilih Metode Pembayaran:
+                <ul>
+                    <li><strong>Saldo Bee</strong> (langsung dari saldo)</li>
+                    <li><strong>Bee Pay Later</strong> (jika sudah aktif)</li>
+                </ul>
+            </li>
+            <li>Konfirmasi Transfer (review + tambah catatan opsional)</li>
+            <li><span class="badge badge-success">✓</span> Transfer Berhasil</li>
+        </ol>
+
+        <h3>6️⃣ Aktivasi Pay Later</h3>
+        <div class="warning-box">
+            <strong>Note:</strong> Fitur ini membutuhkan eligibility check (akun aktif, KYC verified)
+        </div>
+        <ol>
+            <li>Di Home Screen, scroll ke bawah</li>
+            <li>Klik Card <strong>"Bee Pay Later"</strong></li>
+            <li>Klik <strong>"Aktifkan Pay Later"</strong></li>
+            <li>Syarat Aktivasi:
+                <ul>
+                    <li><span class="badge badge-success">✓</span> KYC Terverifikasi</li>
+                    <li><span class="badge badge-success">✓</span> Akun Aktif</li>
+                    <li><span class="badge badge-success">✓</span> Tidak Ada Tunggakan</li>
+                </ul>
+            </li>
+            <li>Credit Limit Dihitung Otomatis (Rp 1 juta - Rp 5 juta)</li>
+            <li><span class="badge badge-success">✓</span> Pay Later Aktif</li>
+        </ol>
+
+        <h3>7️⃣ Transfer dengan Pay Later</h3>
+        <ol>
+            <li>Transfer → Pilih kontak → Masukkan jumlah (min. Rp 10.000)</li>
+            <li>Pilih <strong>"Bee Pay Later"</strong> sebagai metode pembayaran</li>
+            <li>Sistem akan cek limit dan buat loan otomatis (tenor default: 3 bulan)</li>
+            <li>Installment Info:
+                <table>
+                    <tr>
+                        <th>Tenor</th>
+                        <th>Bunga</th>
+                    </tr>
+                    <tr>
+                        <td>1 bulan</td>
+                        <td>0%</td>
+                    </tr>
+                    <tr>
+                        <td>3 bulan</td>
+                        <td>0%</td>
+                    </tr>
+                    <tr>
+                        <td>6 bulan</td>
+                        <td>1.5%/bulan</td>
+                    </tr>
+                    <tr>
+                        <td>12 bulan</td>
+                        <td>2%/bulan</td>
+                    </tr>
+                </table>
+            </li>
+            <li><span class="badge badge-success">✓</span> Konfirmasi → Loan dibuat → Transfer berhasil</li>
+        </ol>
+
+        <h2>📋 Daftar Fitur Lengkap</h2>
+
+        <h3><span class="badge badge-success">✓</span> Fitur yang Sudah Selesai</h3>
+        
+        <h4>Authentication & Security</h4>
+        <ul>
+            <li>Registrasi dengan email & phone</li>
+            <li>Login dengan PIN 6 digit</li>
+            <li>Firebase Authentication</li>
+            <li>Auto-login (remember session)</li>
+            <li>Logout</li>
+        </ul>
+
+        <h4>Bank Digital Core</h4>
+        <ul>
+            <li>Top Up saldo</li>
+            <li>Transfer ke kontak</li>
+            <li>Manajemen kontak transfer</li>
+            <li>Real-time balance update</li>
+            <li>Transaction history</li>
+        </ul>
+
+        <h4>Pay Later (Phase 1 & 2)</h4>
+        <ul>
+            <li>Aktivasi Pay Later</li>
+            <li>Credit limit calculation</li>
+            <li>Eligibility check</li>
+            <li>Transfer dengan Pay Later</li>
+            <li>Loan creation otomatis</li>
+            <li>Installment calculation</li>
+            <li>Real-time limit update</li>
+            <li>Multiple tenor support (1, 3, 6, 12 bulan)</li>
+        </ul>
+
+        <h4>UI/UX</h4>
+        <ul>
+            <li>Modern design dengan Bee branding</li>
+            <li>Responsive layout</li>
+            <li>Dark mode ready</li>
+            <li>Loading states & error handling</li>
+            <li>Success animations</li>
+        </ul>
+
+        <h3><span class="badge badge-warning">⏳</span> Fitur Dalam Pengembangan</h3>
+        
+        <h4>Pay Later Enhancement</h4>
+        <ul>
+            <li><span class="badge badge-warning">⏳</span> Tenor Selection UI - User belum bisa pilih tenor (fixed 3 bulan)</li>
+            <li><span class="badge badge-warning">⏳</span> Installment Info Display - Preview cicilan di confirmation screen</li>
+            <li><span class="badge badge-warning">⏳</span> Loan History Tab - Tab riwayat masih empty state</li>
+            <li><span class="badge badge-warning">⏳</span> Loan Detail Screen - Screen detail per loan</li>
+            <li><span class="badge badge-warning">⏳</span> Pay Installment - Pembayaran cicilan bulanan</li>
+            <li><span class="badge badge-warning">⏳</span> Overdue Detection - Deteksi keterlambatan bayar</li>
+            <li><span class="badge badge-warning">⏳</span> Payment Reminder - Notifikasi jatuh tempo</li>
+        </ul>
+
+        <h4>Bank Digital Enhancement</h4>
+        <ul>
+            <li><span class="badge badge-warning">⏳</span> QR Code Payment - Bayar dengan QR</li>
+            <li><span class="badge badge-warning">⏳</span> Request Money - Minta uang dari kontak</li>
+            <li><span class="badge badge-warning">⏳</span> Split Bill - Patungan</li>
+            <li><span class="badge badge-warning">⏳</span> Recurring Payment - Pembayaran berulang</li>
+            <li><span class="badge badge-warning">⏳</span> Savings Goal - Target tabungan</li>
+        </ul>
+
+        <h4>Profile & Settings</h4>
+        <ul>
+            <li><span class="badge badge-warning">⏳</span> Edit Profile - Ubah nama, email, phone</li>
+            <li><span class="badge badge-warning">⏳</span> Change PIN - Ganti PIN keamanan</li>
+            <li><span class="badge badge-warning">⏳</span> KYC Verification - Upload KTP untuk limit lebih tinggi</li>
+            <li><span class="badge badge-warning">⏳</span> Bank Account Link - Hubungkan rekening bank</li>
+            <li><span class="badge badge-warning">⏳</span> Notification Settings - Atur notifikasi</li>
+        </ul>
+
+        <h3><span class="badge badge-danger">❌</span> Known Issues & Limitations</h3>
+        <div class="warning-box">
+            <ol>
+                <li><strong>Pay Later Activation</strong> - Eligibility check di-bypass untuk testing. Production need proper account age & transaction history check.</li>
+                <li><strong>Logo Cache</strong> - Perlu uninstall → reinstall untuk refresh app icon. Hot reload tidak cukup untuk asset changes.</li>
+                <li><strong>Firestore Index</strong> - Warning: Missing composite index for transaction queries. Need to create index via Firebase Console.</li>
+                <li><strong>Java Version</strong> - Build requires Java 11+ (saat ini pakai Java 17). Gradle 8.13 compatibility.</li>
+            </ol>
+        </div>
+
+        <h2>🛠️ Technical Stack</h2>
+        <table>
+            <tr>
+                <th>Kategori</th>
+                <th>Technology</th>
+            </tr>
+            <tr>
+                <td><strong>Frontend</strong></td>
+                <td>Flutter 3.6+, Dart 3.0+</td>
+            </tr>
+            <tr>
+                <td><strong>State Management</strong></td>
+                <td>Provider</td>
+            </tr>
+            <tr>
+                <td><strong>Backend</strong></td>
+                <td>Firebase Authentication, Cloud Firestore</td>
+            </tr>
+            <tr>
+                <td><strong>Design</strong></td>
+                <td>Orange (#FF9800) & Blue (#6C5CE7)</td>
+            </tr>
+        </table>
+
+        <h2>📊 Database Structure</h2>
+        <pre><code>users/{userId}
+├── name: string
+├── email: string
+├── phone: string
+├── pin: string (hashed)
+├── balance: number
+├── isKycVerified: boolean
+├── createdAt: timestamp
+└── payLater/
+    ├── activation/
+    │   ├── status: "active" | "inactive"
+    │   ├── creditLimit: number
+    │   ├── usedLimit: number
+    │   └── availableLimit: number
+    └── loans/{loanId}
+        ├── amount: number
+        ├── tenorMonths: number
+        ├── interestRate: number
+        ├── monthlyInstallment: number
+        ├── totalRepayment: number
+        ├── status: "active" | "paid" | "overdue"
+        ├── createdAt: timestamp
+        └── dueDate: timestamp</code></pre>
+
+        <h2>🔐 Security & Privacy</h2>
+        <div class="success-box">
+            <ul>
+                <li><strong>Data Encryption:</strong> All sensitive data encrypted</li>
+                <li><strong>PIN Protection:</strong> 6-digit PIN for transactions</li>
+                <li><strong>Firebase Security Rules:</strong> Proper access control</li>
+                <li><strong>No Data Sharing:</strong> User data tidak dibagikan ke pihak ketiga</li>
+            </ul>
+        </div>
+
+        <h2>📝 Changelog</h2>
+        <div class="info-box">
+            <h4>v1.0.0 (2026-01-06)</h4>
+            <ul>
+                <li>Initial release</li>
+                <li>Bank Digital core features</li>
+                <li>Pay Later Phase 1 & 2</li>
+                <li>Authentication & security</li>
+                <li>Transaction history</li>
+                <li>Modern UI with Bee branding</li>
+                <li>APK build ready (bee.apk - 52.5 MB)</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>BEE Bank Digital</strong> © 2026 - All Rights Reserved</p>
+            <p>Terakhir Diupdate: 6 Januari 2026 | Versi Dokumentasi: 1.0</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -107,7 +107,7 @@ class PayLaterActivation {
     return isActive &&
         kycVerified &&
         amount <= availableLimit &&
-        amount >= 100000; // Min Rp 100k
+        amount >= 10000; // Min Rp 10k
   }
 
   /// Get used percentage (0-100)

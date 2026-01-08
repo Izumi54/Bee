@@ -10,21 +10,27 @@ import 'user_provider.dart';
 class PayLaterProvider with ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
 
-  // Stream subscription
+  // Stream subscriptions
   StreamSubscription? _payLaterSubscription;
+  StreamSubscription? _loansSubscription;
 
   // State
   PayLaterActivation? _activation;
+  List<Loan> _activeLoans = [];
+  List<Loan> _loanHistory = [];
   bool _isLoading = false;
   String? _error;
 
   // Getters
   PayLaterActivation? get activation => _activation;
+  List<Loan> get activeLoans => _activeLoans;
+  List<Loan> get loanHistory => _loanHistory;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
   // Convenience getters
   bool get isActive => _activation?.isActive ?? false;
+  bool get hasActiveLoans => _activeLoans.isNotEmpty;
   double get creditLimit => _activation?.creditLimit ?? 0.0;
   double get availableLimit => _activation?.availableLimit ?? 0.0;
   double get usedLimit => _activation?.usedLimit ?? 0.0;
@@ -58,6 +64,32 @@ class PayLaterProvider with ChangeNotifier {
               debugPrint('❌ Pay Later stream error: $error');
               _error = error.toString();
               notifyListeners();
+            },
+          );
+
+      // Listen to loans realtime
+      await _loansSubscription?.cancel();
+      _loansSubscription = _firestoreService
+          .loanHistoryStream(userId)
+          .listen(
+            (loansData) {
+              _loanHistory = loansData
+                  .map((data) => Loan.fromJson(data['id'] as String, data))
+                  .toList();
+              _activeLoans = _loanHistory
+                  .where(
+                    (loan) =>
+                        loan.status == LoanStatus.active ||
+                        loan.status == LoanStatus.pending,
+                  )
+                  .toList();
+              debugPrint(
+                '✅ Loans updated: ${_loanHistory.length} total, ${_activeLoans.length} active',
+              );
+              notifyListeners();
+            },
+            onError: (error) {
+              debugPrint('❌ Loans stream error: $error');
             },
           );
     } catch (e) {
@@ -231,9 +263,79 @@ class PayLaterProvider with ChangeNotifier {
     return _activation?.canBorrow(amount) ?? false;
   }
 
+  /// Create a new Pay Later loan
+  Future<String> createLoan({
+    required String userId,
+    required double amount,
+    required int tenorMonths,
+    String? purpose,
+    String? recipientId,
+    String? recipientName,
+  }) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Check if can borrow
+      if (!canBorrow(amount)) {
+        throw Exception('Tidak dapat meminjam jumlah ini');
+      }
+
+      // Calculate installment
+      final calculation = calculateInstallment(
+        amount: amount,
+        tenorMonths: tenorMonths,
+      );
+
+      // Calculate due date (1 month from now)
+      final dueDate = DateTime.now().add(Duration(days: 30 * tenorMonths));
+
+      // Create loan data
+      final loanData = {
+        'amount': amount,
+        'tenorMonths': tenorMonths,
+        'interestRate': calculation['interestRate'],
+        'totalRepayment': calculation['totalRepayment'],
+        'monthlyInstallment': calculation['monthlyInstallment'],
+        'status': 'active',
+        'dueDate': dueDate,
+        'remainingAmount': calculation['totalRepayment'],
+        'purpose': purpose,
+        'recipientId': recipientId,
+        'recipientName': recipientName,
+      };
+
+      // Create loan in Firestore
+      final loanId = await _firestoreService.createLoan(userId, loanData);
+
+      // Update Pay Later used limit
+      await _firestoreService.updatePayLaterUsage(
+        userId,
+        amount: amount,
+        isDeduction: true,
+      );
+
+      debugPrint(
+        '✅ Loan created: $loanId - Rp $amount for $tenorMonths months',
+      );
+
+      _isLoading = false;
+      notifyListeners();
+
+      return loanId;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      debugPrint('❌ Create loan error: $e');
+      rethrow;
+    }
+  }
+
   @override
   void dispose() {
     _payLaterSubscription?.cancel();
+    _loansSubscription?.cancel();
     super.dispose();
   }
 }
