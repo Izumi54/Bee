@@ -34,16 +34,8 @@ class CreditLimitCalculator {
       };
     }
 
-    // Minimum account age (7 days)
-    if (accountAgeDays < 7) {
-      return {
-        'limit': 0.0,
-        'factors': {
-          'accountAgeDays': accountAgeDays,
-          'reason': 'Account must be at least 7 days old',
-        },
-      };
-    }
+    // Removed: Minimum account age requirement for testing
+    // Akun baru bisa langsung aktivasi Pay Later
 
     // Calculate base limit
     double baseLimit = MIN_LIMIT;
@@ -121,7 +113,9 @@ class CreditLimitCalculator {
   /// 30 days = +Rp 500k
   /// 60+ days = +Rp 1 juta (max)
   static double _calculateAgeScore(int accountAgeDays) {
-    if (accountAgeDays < 7) return 0;
+    // Removed: 7-day minimum requirement
+    if (accountAgeDays < 0)
+      return 0; // Only check for negative (invalid) values
 
     // Each day worth ~Rp 16.6k (1M / 60 days)
     double score = (accountAgeDays / 60) * 1000000;
@@ -132,14 +126,14 @@ class CreditLimitCalculator {
 
   /// Check if user is eligible for Pay Later
   static bool isEligible({
-  required bool isKycVerified,
-  required int accountAgeDays,
-  bool? hasOverduePayments,
-}) {
-  // TEMPORARY: Always return true for testing
-  debugPrint('🔍 Eligibility Check: KYC=, Age= days');
-  return true; // Bypass all checks
-}
+    required bool isKycVerified,
+    required int accountAgeDays,
+    bool? hasOverduePayments,
+  }) {
+    // TEMPORARY: Always return true for testing
+    debugPrint('🔍 Eligibility Check: KYC=, Age= days');
+    return true; // Bypass all checks
+  }
 
   /// Calculate monthly installment for a loan
   ///

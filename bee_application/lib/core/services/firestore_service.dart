@@ -385,16 +385,41 @@ class FirestoreService {
     required bool isDeduction, // true = borrow, false = repay
   }) async {
     try {
-      final increment = isDeduction ? amount : -amount;
+      // Get current values first
+      final doc = await _users
+          .doc(userId)
+          .collection('payLater')
+          .doc('activation')
+          .get();
 
-      await _users.doc(userId).collection('payLater').doc('activation').update({
-        'usedLimit': FieldValue.increment(increment),
-        'availableLimit': FieldValue.increment(-increment),
+      if (!doc.exists) {
+        throw Exception('Pay Later belum diaktifkan');
+      }
+
+      final data = doc.data();
+      final currentUsedLimit = (data?['usedLimit'] as num?)?.toDouble() ?? 0.0;
+      final currentAvailableLimit =
+          (data?['availableLimit'] as num?)?.toDouble() ?? 0.0;
+
+      // Calculate new values
+      final newUsedLimit = isDeduction
+          ? currentUsedLimit + amount
+          : (currentUsedLimit - amount).clamp(0.0, double.infinity);
+      final newAvailableLimit = isDeduction
+          ? currentAvailableLimit - amount
+          : currentAvailableLimit + amount;
+
+      // Use set with merge to ensure fields exist
+      await _users.doc(userId).collection('payLater').doc('activation').set({
+        'usedLimit': newUsedLimit,
+        'availableLimit': newAvailableLimit,
         'lastUpdated': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       final action = isDeduction ? 'borrowed' : 'repaid';
-      debugPrint('✅ Pay Later usage updated: $userId $action $amount');
+      debugPrint(
+        '✅ Pay Later usage updated: $userId $action $amount (used: $newUsedLimit, available: $newAvailableLimit)',
+      );
     } catch (e) {
       debugPrint('❌ Update Pay Later usage error: $e');
       throw Exception('Gagal update penggunaan Pay Later');
