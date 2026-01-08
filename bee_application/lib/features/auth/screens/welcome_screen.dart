@@ -23,13 +23,13 @@ class WelcomeScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Spacing atas
-              SizedBox(height: responsive.hp(8)),
+              // Logo dinaikkan
+              SizedBox(height: responsive.hp(4)),
 
               // Logo besar
               const BeeLogo(sizeMode: 'large', showText: true),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // Tagline
               Text(
@@ -42,21 +42,15 @@ class WelcomeScreen extends StatelessWidget {
 
               const Spacer(),
 
-              // Ilustrasi atau info singkat (opsional)
+              // Tagline utama
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Column(
-                  children: [
-                    Image.asset('assets/images/bee_logo.png', width: 120, height: 120,),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Kelola keuangan Anda dengan mudah dan aman',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: Text(
+                  'Kelola keuangan Anda dengan mudah dan aman',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
 
