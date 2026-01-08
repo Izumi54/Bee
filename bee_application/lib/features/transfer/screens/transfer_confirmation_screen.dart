@@ -80,7 +80,11 @@ class _TransferConfirmationScreenState
         );
       } else if (paymentMethod == 'pay_later') {
         // Pay Later payment
-        final userId = userProvider.currentUser?.phone ?? '';
+        final userId = userProvider.userId;
+
+        if (userId == null) {
+          throw Exception('User tidak terautentikasi');
+        }
 
         await payLaterProvider.createLoan(
           userId: userId,
