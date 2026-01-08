@@ -186,14 +186,28 @@ class UserProvider extends ChangeNotifier {
 
       final userId = credential.user!.uid;
 
-      // 2. Create user document in Firestore
-      await _firestoreService.createUser(userId, {
-        'fullName': fullName,
-        'email': email,
-        'phone': phone,
-        'balance': 2500000.0, // Initial balance 2.5M
-        'isKycVerified': false,
-      });
+      // 2. Create user document in Firestore with retry & rollback
+      try {
+        await _createUserWithRetry(userId, {
+          'fullName': fullName,
+          'email': email,
+          'phone': phone,
+          'balance': 2500000.0, // Initial balance 2.5M
+          'isKycVerified': false,
+        });
+      } catch (firestoreError) {
+        // ROLLBACK: Delete Firebase Auth user if Firestore fails
+        debugPrint('⚠️ Firestore creation failed, rolling back Auth user...');
+        try {
+          await credential.user!.delete();
+          debugPrint('✅ Auth user rollback successful');
+        } catch (deleteError) {
+          debugPrint('❌ Rollback failed: $deleteError');
+        }
+
+        // Rethrow original Firestore error
+        throw Exception('Gagal membuat profil pengguna. Silakan coba lagi.');
+      }
 
       debugPrint('✅ User registered: $userId');
 
@@ -207,6 +221,37 @@ class UserProvider extends ChangeNotifier {
       debugPrint('❌ Register error: $e');
       rethrow; // Let UI handle the error message
     }
+  }
+
+  /// Create user with retry logic (attempt 3 times)
+  Future<void> _createUserWithRetry(
+    String userId,
+    Map<String, dynamic> userData, {
+    int maxRetries = 3,
+  }) async {
+    int attempts = 0;
+    Exception? lastError;
+
+    while (attempts < maxRetries) {
+      try {
+        await _firestoreService.createUser(userId, userData);
+        debugPrint('✅ Firestore user created (attempt ${attempts + 1})');
+        return; // Success!
+      } catch (e) {
+        attempts++;
+        lastError = e is Exception ? e : Exception(e.toString());
+        debugPrint('❌ Firestore attempt $attempts/$maxRetries failed: $e');
+
+        if (attempts < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await Future.delayed(Duration(seconds: attempts * 2));
+        }
+      }
+    }
+
+    // All retries failed
+    throw lastError ??
+        Exception('Failed to create user after $maxRetries attempts');
   }
 
   /// Set PIN (hashed) in Firestore
