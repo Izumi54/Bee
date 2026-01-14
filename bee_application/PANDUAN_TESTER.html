@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Bank Digital - Panduan Testing v1.0.1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #FFA719;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #FFA719;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: #FFA719;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #FFA719;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        h2 {
+            color: #FFA719;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h3 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .download-section {
+            background: linear-gradient(135deg, #FFA719 0%, #FFD419 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .download-button {
+            display: inline-block;
+            background: white;
+            color: #FFA719;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .step-container {
+            margin: 20px 0;
+        }
+
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #FFA719;
+            border-radius: 5px;
+        }
+
+        .step-number {
+            background: #FFA719;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .test-checklist {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .test-checklist label {
+            display: block;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .test-checklist input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #FFA719;
+            color: white;
+        }
+
+        .credentials-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 2px dashed #FFA719;
+        }
+
+        .important {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🐝 Bee Bank Digital</h1>
+            <p style="font-size: 1.2em; color: #666;">Panduan Testing & Download APK</p>
+            <span class="version-badge">Version 1.0.1 - Bug Fix Release</span>
+            <p style="margin-top: 15px; color: #888;">Tanggal: 14 Januari 2026</p>
+        </div>
+
+        <!-- ALERT PENTING -->
+        <div class="alert">
+            <strong>⚠️ PENTING!</strong> Ini adalah VERSI BETA untuk testing. Jangan gunakan data atau informasi pribadi
+            yang sebenarnya. Aplikasi ini masih dalam tahap pengembangan.
+        </div>
+
+        <!-- DOWNLOAD SECTION -->
+        <div class="download-section">
+            <h2 style="color: white; border: none; margin-top: 0;">📥 Download APK</h2>
+            <p style="font-size: 1.1em; margin: 15px 0;">File yang perlu Anda download:</p>
+            <h3 style="color: white; margin: 10px 0;">bee-v1.0.1-latest.apk</h3>
+            <p style="margin-bottom: 20px;">File ini selalu berisi versi terbaru dari aplikasi Bee</p>
+            <a href="#" class="download-button">Klik untuk Download APK</a>
+            <p style="margin-top: 20px; font-size: 0.9em;">Ukuran: ~30-50 MB | Platform: Android 5.0+</p>
+        </div>
+
+        <!-- WHAT'S NEW -->
+        <h2>✨ Yang Baru di Versi 1.0.1</h2>
+        <div class="alert-success">
+            <h3 style="margin-top: 0;">🐛 Perbaikan Bug:</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Fixed Pay Later tidak bisa digunakan untuk transfer</li>
+                <li>Fixed error saat update limit Pay Later</li>
+                <li>Removed persyaratan akun minimal 7 hari</li>
+            </ul>
+
+            <h3 style="margin-top: 15px;">🎨 Perbaikan Tampilan:</h3>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Ganti icon celengan dengan logo bee</li>
+                <li>Hapus info saldo yang membingungkan di konfirmasi transfer</li>
+                <li>Update layout welcome screen</li>
+            </ul>
+        </div>
+
+        <!-- CARA INSTALL -->
+        <h2>📱 Cara Install APK</h2>
+        <div class="step-container">
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Download APK</strong>
+                <p>Download file <code>bee-v1.0.1-latest.apk</code> dari Google Drive</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Izinkan Install dari Unknown Sources</strong>
+                <p>Settings → Security → Enable "Install from Unknown Sources"</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Buka File APK</strong>
+                <p>Buka file yang sudah didownload</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Install</strong>
+                <p>Klik Install dan tunggu proses selesai</p>
+            </div>
+
+            <div class="step">
+                <span class="step-number">5</span>
+                <strong>Buka Aplikasi</strong>
+                <p>Cari icon "BEE" di launcher dan buka aplikasi</p>
+            </div>
+        </div>
+
+        <!-- FITUR YANG PERLU DI-TEST -->
+        <h2>🧪 Fitur yang Perlu Di-Test</h2>
+
+        <h3>1. Registrasi & Login</h3>
+        <div class="test-checklist">
+            <label><input type="checkbox"> Daftar akun baru dengan data dummy</label>
+            <label><input type="checkbox"> Setup PIN 6 digit</label>
+            <label><input type="checkbox"> Logout dan login kembali dengan PIN</label>
+        </div>
+
+        <h3>2. Top Up Saldo</h3>
+        <div class="test-checklist">
+            <label><input type="checkbox"> Top up saldo (simulasi, otomatis berhasil)</label>
+            <label><input type="checkbox"> Cek saldo bertambah di home screen</label>
+            <label><input type="checkbox"> Lihat transaksi di history</label>
+        </div>
+
+        <h3>3. KYC Verification</h3>
+        <div class="test-checklist">
+            <label><input type="checkbox"> Upload foto selfie</label>
+            <label><input type="checkbox"> Upload foto KTP/ID Card</label>
+            <label><input type="checkbox"> Submit KYC (auto-approve)</label>
+            <label><input type="checkbox"> Cek status KYC di profile</label>
+        </div>
+
+        <h3>4. Pay Later (FITUR UTAMA) 🎯</h3>
+        <div class="test-checklist">
+            <label><input type="checkbox"> Aktivasi Pay Later (pastikan KYC sudah selesai)</label>
+            <label><input type="checkbox"> Cek credit limit yang diberikan</label>
+            <label><input type="checkbox"> Transfer pakai Pay Later</label>
+            <label><input type="checkbox"> Cek limit berkurang setelah transfer</label>
+            <label><input type="checkbox"> Lihat loan di transaction history</label>
+        </div>
+
+        <h3>5. Transfer</h3>
+        <div class="test-checklist">
+            <label><input type="checkbox"> Transfer pakai saldo biasa</label>
+            <label><input type="checkbox"> Transfer pakai Pay Later</label>
+            <label><input type="checkbox"> Coba transfer dengan saldo tidak cukup</label>
+        </div>
+
+        <!-- PANDUAN TESTING DETAIL -->
+        <h2>📝 Panduan Testing Detail</h2>
+
+        <h3>Skenario 1: First Time User</h3>
+        <div class="step-container">
+            <p><strong>1. Registrasi</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Nama: Test User</li>
+                <li>Email: test@example.com (boleh fake)</li>
+                <li>NIK: 16 digit angka random</li>
+                <li>Tanggal Lahir: Pilih sembarang</li>
+                <li>Password: min 8 karakter</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>2. Setup PIN</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Buat PIN 6 digit (misalnya: 123456)</li>
+                <li>Konfirmasi PIN yang sama</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>3. Top Up Saldo</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Klik "Top Up" di home screen</li>
+                <li>Masukkan nominal: Rp 5.000.000</li>
+                <li>Pilih bank: BCA</li>
+                <li>Klik "Top Up" → Otomatis berhasil (simulasi)</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>4. KYC Verification</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Klik "Verify Account" di profile</li>
+                <li>Upload foto selfie (boleh foto apa saja)</li>
+                <li>Upload foto KTP (boleh foto apa saja)</li>
+                <li>Submit → Otomatis approved</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>5. Aktivasi Pay Later</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Buka tab "Pay Later"</li>
+                <li>Klik "Aktivasi Sekarang"</li>
+                <li>Sistem akan cek eligibility</li>
+                <li>Anda akan dapat credit limit (Rp 1 - 5 juta)</li>
+            </ul>
+        </div>
+
+        <h3>Skenario 2: Transfer dengan Pay Later</h3>
+        <div class="step-container">
+            <p><strong>1. Buat Kontak Penerima</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Klik "Transfer"</li>
+                <li>Klik "+" untuk tambah kontak</li>
+                <li>Nama: Teman Test</li>
+                <li>No. Rekening: 10 digit angka</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>2. Transfer Pakai Pay Later</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Pilih kontak yang tadi dibuat</li>
+                <li>Masukkan nominal: Rp 500.000</li>
+                <li>Pilih <strong>"Bee Pay Later"</strong> sebagai metode pembayaran</li>
+                <li>Klik "Lanjutkan"</li>
+                <li>Konfirmasi dengan PIN</li>
+                <li>Transfer berhasil!</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>3. Verifikasi</strong></p>
+            <ul style="margin-left: 30px;">
+                <li>Cek Pay Later limit berkurang Rp 500.000</li>
+                <li>Cek history → Ada transaksi Pay Later</li>
+                <li>Cek loans → Ada loan baru dengan cicilan 3 bulan</li>
+            </ul>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <h2>🔧 Troubleshooting</h2>
+
+        <h3>Problem 1: APK tidak bisa di-install</h3>
+        <div class="important">
+            <strong>Solusi:</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+                <li>Pastikan "Install from Unknown Sources" sudah enabled</li>
+                <li>Uninstall versi lama jika ada</li>
+                <li>Coba download ulang APK-nya</li>
+            </ul>
+        </div>
+
+        <h3>Problem 2: Pay Later tidak bisa diaktivasi</h3>
+        <div class="important">
+            <strong>Solusi:</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+                <li>Pastikan KYC sudah verified terlebih dahulu</li>
+                <li>Top up saldo minimal Rp 1.000.000</li>
+                <li>Coba logout dan login kembali</li>
+            </ul>
+        </div>
+
+        <h3>Problem 3: Transfer Pay Later gagal</h3>
+        <div class="important">
+            <strong>Solusi:</strong>
+            <ul style="margin-left: 20px; margin-top: 5px;">
+                <li>Pastikan Pay Later sudah diaktivasi</li>
+                <li>Cek available limit mencukupi</li>
+                <li>Minimum transfer Pay Later: Rp 10.000</li>
+                <li>Pastikan koneksi internet stabil</li>
+            </ul>
+        </div>
+
+        <!-- DATA DUMMY -->
+        <h2>🎭 Data Dummy untuk Testing</h2>
+        <div class="credentials-box">
+            <p><strong>Gunakan data dummy berikut untuk testing:</strong></p>
+            <table>
+                <tr>
+                    <th>Field</th>
+                    <th>Contoh Data</th>
+                </tr>
+                <tr>
+                    <td>Nama</td>
+                    <td>Budi Tester</td>
+                </tr>
+                <tr>
+                    <td>Email</td>
+                    <td>budi.tester@example.com</td>
+                </tr>
+                <tr>
+                    <td>NIK</td>
+                    <td>3201234567891234</td>
+                </tr>
+                <tr>
+                    <td>Tanggal Lahir</td>
+                    <td>01/01/1990</td>
+                </tr>
+                <tr>
+                    <td>Password</td>
+                    <td>Testing123</td>
+                </tr>
+                <tr>
+                    <td>PIN</td>
+                    <td>123456</td>
+                </tr>
+                <tr>
+                    <td>No. Rekening Tujuan</td>
+                    <td>9876543210</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- FITUR YANG TERSEDIA -->
+        <h2>✅ Fitur yang Tersedia di v1.0.1</h2>
+        <ul class="feature-list">
+            <li>Registrasi & Login dengan Firebase Authentication</li>
+            <li>Security dengan PIN 6 digit</li>
+            <li>Top Up Saldo (simulasi)</li>
+            <li>Transfer ke User Lain</li>
+            <li>KYC Verification (Selfie + ID Card)</li>
+            <li>Pay Later Activation & Usage</li>
+            <li>Transaction History</li>
+            <li>Profile Management</li>
+        </ul>
+
+        <!-- FITUR COMING SOON -->
+        <h2>🚧 Fitur Coming Soon</h2>
+        <ul style="margin-left: 30px;">
+            <li>Pilihan tenor Pay Later (1, 3, 6, 12 bulan)</li>
+            <li>Payment cicilan Pay Later</li>
+            <li>Loan history detail</li>
+            <li>QRIS Payment</li>
+            <li>Bill Payment</li>
+        </ul>
+
+        <!-- FEEDBACK -->
+        <h2>💬 Feedback & Bug Report</h2>
+        <div class="alert">
+            <p style="margin-bottom: 10px;"><strong>Jika menemukan bug atau ada feedback, mohon laporkan dengan
+                    format:</strong></p>
+            <ol style="margin-left: 20px;">
+                <li><strong>Versi APK:</strong> v1.0.1</li>
+                <li><strong>Device:</strong> (Merk & Model HP)</li>
+                <li><strong>Android Version:</strong></li>
+                <li><strong>Steps to Reproduce:</strong> (Langkah-langkah error terjadi)</li>
+                <li><strong>Expected:</strong> (Yang diharapkan)</li>
+                <li><strong>Actual:</strong> (Yang terjadi)</li>
+                <li><strong>Screenshot:</strong> (Jika ada)</li>
+            </ol>
+        </div>
+
+        <!-- KONTAK -->
+        <h2>📞 Kontak Developer</h2>
+        <div class="credentials-box">
+            <p><strong>Untuk pertanyaan atau bug report:</strong></p>
+            <p style="margin-top: 10px;">Email: [Your Email]</p>
+            <p>WhatsApp: [Your WhatsApp]</p>
+            <p>Project: Bee Bank Digital - Beta Testing</p>
+        </div>
+
+        <!-- FOOTER -->
+        <div
+            style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f0f0f0; text-align: center; color: #888;">
+            <p><strong>Bee Bank Digital v1.0.1</strong></p>
+            <p>Beta Testing Release - 14 Januari 2026</p>
+            <p style="margin-top: 10px;">Built with Flutter | Powered by Firebase</p>
+        </div>
+    </div>
+</body>
+
+</html>
